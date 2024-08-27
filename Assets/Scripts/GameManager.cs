@@ -59,10 +59,18 @@ public class GameManager : MonoBehaviour{
 
             [Tooltip("Text for the health")]
             public TMP_Text HPText;
-            
+
+            [Tooltip("The camera controller to shake that ass (the camera, but you shake yours neko 😩)")]
+            public CameraController CameraController;
+
         [Header("Bullets")]
             [Tooltip("This is a list for the bullets")]
             public List<Bullet> BulletsActive;
+
+        [Header("Camera Shake")]
+            [Tooltip("")]
+            public float HealthLossShakeDuration = 1.0f;
+            public float HealthLossShakeStrength = 1.0f;
 
     #endregion
     
@@ -306,6 +314,7 @@ public class GameManager : MonoBehaviour{
     public void DealPlayerDamage(int DamageAmount){
         Health -= DamageAmount;
         HPText.text = "Health: " + Health + "/" + HealthMAX;
+        CameraController.ShakeCamera(HealthLossShakeDuration * DamageAmount, HealthLossShakeStrength * DamageAmount, 0.69f, 0.90f);
     }
 
     #endregion
