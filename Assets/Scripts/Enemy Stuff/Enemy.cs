@@ -352,6 +352,7 @@ public class Enemy : MonoBehaviour{
         that dude is fuckin dead LMAO
     **/
 	public void DestroyPart(EnemyPart PartToDestroy){
+        StartCoroutine(FinishTimestop());
 		//Deals damage
 		Health -= PartToDestroy.Damage;
 		//If the health is lower than 0 then like die ig
@@ -448,7 +449,15 @@ public class Enemy : MonoBehaviour{
         
     }
 
-	
 	#endregion
+
+    #region Coroutines
+    //Timestop waiter
+    private IEnumerator FinishTimestop(){
+        while(Time.timeScale != 1.0f){
+            yield return null;
+        }
+    }
+    #endregion
 
 }

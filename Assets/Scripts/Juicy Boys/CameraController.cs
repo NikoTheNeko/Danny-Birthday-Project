@@ -53,7 +53,7 @@ public class CameraController : MonoBehaviour{
             transform.localPosition = CameraMovementPosition;
 
             //Decay the Shake
-            ShakeMagnitude = Mathf.Lerp(ShakeMagnitude, 1.0f, ShakeDecay * Time.deltaTime);
+            ShakeMagnitude = Mathf.Lerp(ShakeMagnitude, 1.0f, ShakeDecay);
 
             //Count down timer
             Timer -= Time.deltaTime;

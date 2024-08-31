@@ -62,6 +62,8 @@ public class GameManager : MonoBehaviour{
 
             [Tooltip("The camera controller to shake that ass (the camera, but you shake yours neko 😩)")]
             public CameraController CameraController;
+            [Tooltip("HitStopper to be cool and freeze the game")]
+            public HitStopper HitStopper;
 
         [Header("Bullets")]
             [Tooltip("This is a list for the bullets")]
@@ -269,13 +271,22 @@ public class GameManager : MonoBehaviour{
 		Destroys the part if it hits the right amount of votes
 	**/
 	public void ShootPart(Enemy EnemyTargeted, EnemyPart PartToBeDestroyed){
-		//Gets the enemy targeted and makes it destroy it's limbs
+		//JUICE
+        //Shakes the camera bang bang pow pow
+        CameraController.ShakeCamera(0.69f,1.0f, 0.9f, 0.9f);
+        //Timestop
+        HitStopper.HitStop(0.5f, 0.69f);
+        StartCoroutine(FinishTimestop());
+
+        //Gets the enemy targeted and makes it destroy it's limbs
 		//This sounds morbid as fuck lmao
 		//It's okay i'm hot sheesh 😎 🥵
 		EnemyTargeted.DestroyPart(PartToBeDestroyed);
 		//Decrease Bullets by 1
     	BulletsLeft--;
+        //Updates the text for the bullets remaining
     	UpdateBulletTextCounter();
+        
     	//Checks if the gun is empty
     	if(BulletsLeft <= 0){
     		//Activates the Reload Minigame
@@ -317,6 +328,15 @@ public class GameManager : MonoBehaviour{
         CameraController.ShakeCamera(HealthLossShakeDuration * DamageAmount, HealthLossShakeStrength * DamageAmount, 0.69f, 0.90f);
     }
 
+    #endregion
+
+    #region Coroutines
+    //Timestop waiter
+    private IEnumerator FinishTimestop(){
+        while(Time.timeScale != 1.0f){
+            yield return null;
+        }
+    }
     #endregion
 
 }
