@@ -184,16 +184,17 @@ public class GameManager : MonoBehaviour{
         //Breaks down the players names and message, that's all we need for this project
         //If we need more I'm sure we can extract it somehwere
         //Player is the username of the person
-        String Player = ChatCommandMessage.User.DisplayName;
+        string Player = ChatCommandMessage.User.DisplayName;
         //Target is the player message, aka what they're trying to target in the game
-        String Target = ChatCommandMessage.Message;
+        string Target = ChatCommandMessage.Message;
+        Target = Target.ToUpper();
 
         //Debug.Log(Player + " typed " + Target);
 
         //Switch statement to reroute the player
         switch(Target){
             //This is for when the players join
-            case "!join":
+            case "!JOIN":
                 //Players Active will go up with the player joinning
                 PlayersActive++;
                 //The player will be added so they can be counted for votes

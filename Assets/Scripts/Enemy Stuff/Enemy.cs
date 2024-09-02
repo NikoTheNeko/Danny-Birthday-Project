@@ -249,7 +249,7 @@ public class Enemy : MonoBehaviour{
             
             //If the part is nto active
             if(!TempPart.PartActive){
-            	TempPart.VotingText.text += "\n" + "Destroyed!";
+            	TempPart.VotingText.text += "\n" + "Broken!";
             } else {
 	            TempPart.VotingText.text += "\n" + VoteCountUpdater + "/" + TempPart.VotesRequiredRounded;
             }
