@@ -24,6 +24,8 @@ public class GameManager : MonoBehaviour{
 	    [Header("Enemy Related Variables")]
 		    [Tooltip("The Enemies that are in the game")]
 		    public Enemy[] EnemiesAvailable;
+            [Tooltip("The active enemies in the game")]
+            public List<Enemy> EnemiesActive;
 	
 	    [Header("Voting Related Stuff")]
 		    [Tooltip("Dictionary of the users playing and their votes ie [PlayerName], [PartName They're Voting for]")]
@@ -49,6 +51,8 @@ public class GameManager : MonoBehaviour{
 			public int HealthMAX = 5;
 			[Tooltip("Player to target who to walk to")]
             public GameObject PlayerObject;
+            [Tooltip("Shooting Hitstop Length, how long time will stop")]
+            public float ShootHitStopLength = 1.0f;
             
         [Header("Game Objects")]
         	[Tooltip("This is the bullet counter so we can like show you how much bullets you have")]
@@ -64,28 +68,63 @@ public class GameManager : MonoBehaviour{
             public CameraController CameraController;
             [Tooltip("HitStopper to be cool and freeze the game")]
             public HitStopper HitStopper;
+            [Tooltip("The animator that controls the camera rig")]
+            public Animator CameraRig;
+            [Tooltip("This is the animation checker to see if animations are running")]
+            public AnimationPlayingChecker AnimationChecker;
 
         [Header("Bullets")]
             [Tooltip("This is a list for the bullets")]
             public List<Bullet> BulletsActive;
 
         [Header("Camera Shake")]
-            [Tooltip("")]
+            [Tooltip("How much long the camera shakes")]
             public float HealthLossShakeDuration = 1.0f;
+            [Tooltip("How much the camera shakes")]
             public float HealthLossShakeStrength = 1.0f;
+
+        [Header("Audio SFX")]
+            [Tooltip("Gunshot SFX when you shoot bang bang")]
+            public AudioSource GunShotSFX;
+            [Tooltip("Targeting ping when players target an enemy")]
+            public AudioSource TargetingPingSFX;
+            [Tooltip("PP SFX")]
+            public AudioSource PPSFX;
+            [Tooltip("The sound when you run out of bullets")]
+            public AudioSource NoBulletsSFX;
+            [Tooltip("The sound it makes when you reload")]
+            public AudioSource ReloadSFX;
+            public AudioSource D;
+            public AudioSource Deez;
 
     #endregion
     
 
     #region Private Variables
+    [SerializeField]
+    [Header("Private Variables")]
+    [Tooltip("This is the amount of bullets the players have left")]
 	//This is just how much bullets the players have at the moment
-	public int BulletsLeft;
+	private int BulletsLeft;
+
+    [SerializeField]
+    [Tooltip("This is how much health the players have")]
 	//This is how much health the players actually ahve
-	public int Health;
+	private int Health;
+
+    [SerializeField]
+    [Tooltip("This is what wave the players are on")]
+    //This is the wave the player is currently on
+    private int CurrentWave = 0;
+    
+    private bool Wave0Spawned = false;
+    private bool Wave1Spawned = false;
+    private bool Wave2Spawned = false;
+    private bool Wave3Spawned = false;
     #endregion
 
     private void Awake(){
-        DontDestroyOnLoad(gameObject);
+        //DontDestroyOnLoad(gameObject);
         }
 
     // Start is called before the first frame update
@@ -96,16 +135,23 @@ public class GameManager : MonoBehaviour{
         SetUpTwitchIRC();
         //Sets up the voting structures
 	    SetUpVotingStructures();
+        
 	    //Sets up bullets left to be bullets max;
 	    BulletsLeft = BulletsMax;
         //Sets health to the max for initiation
         Health = HealthMAX;
         HPText.text = "Health: " + Health + "/" + HealthMAX;
+        
+        
+        
     }
 
     // Update is called once per frame
     void Update(){
-        
+        if(Input.GetKeyDown(KeyCode.Space)){
+            AdjustCamera();
+        }
+        ManageWave();
     }
 
     #region Set Up Functions
@@ -150,6 +196,9 @@ public class GameManager : MonoBehaviour{
             EnemiesAvailable[i].EnemyNumber = i.ToString();
             EnemiesAvailable[i].NameLabels();
             EnemiesAvailable[i].ArrayToDictionary();
+            Debug.Log("Setting active enemy to off");
+            EnemiesAvailable[i].gameObject.SetActive(false);
+            EnemiesAvailable[i].EntranceReady = true;
         }
     }
 
@@ -197,12 +246,23 @@ public class GameManager : MonoBehaviour{
             case "!JOIN":
                 //Players Active will go up with the player joinning
                 PlayersActive++;
+                //First checks if they're in the system, if they're not then add.
                 //The player will be added so they can be counted for votes
-                PlayerVotes.Add(Player, "");
+                if(!PlayerVotes.ContainsKey(Player)){
+                    PlayerVotes.Add(Player, "");
+                    TwitchChatClient.instance.SendChatMessage(Player + " has joined the training sim. " +
+                                                                PlayersActive + " degens currently playing, difficulty increased.");
+                }
+                break;
+            case "!PP":
+                PPSFX.Play();
                 break;
         }
 
-        VotingProcessing(Player, Target);
+        //If there are bullets then actually shoot
+            if(BulletsLeft > 0){
+                VotingProcessing(Player, Target);
+            }
     }
     
     private void RouteMessage(TwitchChatMessage ChatMessage){
@@ -225,6 +285,7 @@ public class GameManager : MonoBehaviour{
             //Debug.Log(Player + " is in the voting system");
             //If the target is a valid target continue
             if(PartNamesAndVotes.ContainsKey(Target)){
+                
                 //Debug.Log(Target + " is in the target list");
                 //If the player has a vote in already, adjust for that
                 if(PlayerVotes[Player] != ""){
@@ -245,11 +306,38 @@ public class GameManager : MonoBehaviour{
                 PlayerVotes[Player] = Target;
                 //Increments the targets votes
                 PartNamesAndVotes[Target]++;
+
+                //Lets everyone know a player targeted a part
+                TwitchChatClient.instance.SendChatMessage(Player +  " targeted part " + Target + 
+                                                        ". Votes " +  PartNamesAndVotes[Target] + "/" + PartNamesAndEnemyPart[Target].VotesRequiredRounded);
+                
+                //Makes a ping noise depending on how close they're to the target
+                //Hi neko this is past math neko
+                /**
+                    You want the pitch to be 1-3 so in order to do that you need to get the a percentage of 2 (difference of 1 to 3) then add it to 1
+                    This means that 0 (or low to 0) will be 1, then anything else would be inbetween 1-3
+                **/
+
+                //Gets the percentage
+                float PercentageLeft = (float)PartNamesAndVotes[Target] / (float)PartNamesAndEnemyPart[Target].VotesRequiredRounded;
+                //Gets that percentage of 2
+                float PercentageOfTwo = 2 * PercentageLeft;
+                //Gets the total
+                float PitchTotal = 1 + PercentageOfTwo;
+                Debug.Log(PercentageLeft + " " + PercentageOfTwo + " " + PitchTotal);
+                //Sets the audio pitch
+                TargetingPingSFX.pitch = PitchTotal;
+                //Debug.Log(TargetingPingSFX.pitch);
+                //Plays
+                TargetingPingSFX.Play();
+
                 //Compares the votes to see if it's hit the threshold
                 //Checks if the votes for the current target is equal to the part's required destruction number
-                if(PartNamesAndVotes[Target] == PartNamesAndEnemyPart[Target].VotesRequiredRounded){
-                	//Destroys the part owie!
-                	ShootPart(PartNamesAndEnemy[Target], PartNamesAndEnemyPart[Target]); 
+                if(PartNamesAndVotes[Target] == PartNamesAndEnemyPart[Target].VotesRequiredRounded && BulletsLeft > 0){
+                    //Destroys the part owie!
+                	ShootPart(PartNamesAndEnemy[Target], PartNamesAndEnemyPart[Target]);
+                    TwitchChatClient.instance.SendChatMessage(Target +  " last hit by " + Player + 
+                                                ". Part successfully destroyed.");
                 }
                 //Updates the label of the thing
                 PartNamesAndEnemy[Target].UpdateLabel(Target, PartNamesAndVotes[Target]);
@@ -265,6 +353,12 @@ public class GameManager : MonoBehaviour{
 		This is to reload the gun
 	**/
 	public void ReloadGun(){
+        ReloadSFX.Play();
+        if(UnityEngine.Random.Range(0, 100) <= 28){
+						Deez.Play();
+					} else {
+						D.Play();
+					}
 		BulletsLeft = BulletsMax;
 	}
 	
@@ -276,7 +370,7 @@ public class GameManager : MonoBehaviour{
         //Shakes the camera bang bang pow pow
         CameraController.ShakeCamera(0.69f,1.0f, 0.9f, 0.9f);
         //Timestop
-        HitStopper.HitStop(0.5f, 0.69f);
+        HitStopper.HitStop(ShootHitStopLength, 1.0f);
         StartCoroutine(FinishTimestop());
 
         //Gets the enemy targeted and makes it destroy it's limbs
@@ -287,19 +381,25 @@ public class GameManager : MonoBehaviour{
     	BulletsLeft--;
         //Updates the text for the bullets remaining
     	UpdateBulletTextCounter();
+        GunShotSFX.Play();
         
     	//Checks if the gun is empty
     	if(BulletsLeft <= 0){
+            NoBulletsSFX.Play();
+            TwitchChatClient.instance.SendChatMessage("Out of bullets! Initiating reload sequence...");
     		//Activates the Reload Minigame
     		ReloadMinigame();
     	}
 	}
 
     public void ShootBullet(String ChatLetter){
+        //Creates a temp version of the string but uppercased
+        string ChatUpper = ChatLetter.ToUpper();
         
+        //Goes through the bullets active list to see if any bullet matches are active
         foreach(Bullet BulletChecker in BulletsActive){
             //Debug.Log("Letter Check: " + BulletChecker.BulletString + " Player Input: " + ChatLetter.ToUpper());
-            if(ChatLetter.ToUpper().Equals(BulletChecker.BulletString)){
+            if(ChatUpper.Equals(BulletChecker.BulletString)){
                 //("Shot!");
                 BulletsActive.Remove(BulletChecker);
                 BulletChecker.FuckingDies();
@@ -316,17 +416,151 @@ public class GameManager : MonoBehaviour{
 	}
 	
 	public void UpdateBulletTextCounter(){
-		BulletCounter.text = "Bullets Left: " + BulletsLeft + "/3";
+		BulletCounter.text = "Bullets Left: " + BulletsLeft + "/" + BulletsMax;
 	}
     
     #endregion
 
     #region Health Functions
-    
+
+    /**
+        This deals damage tot he player
+    **/
     public void DealPlayerDamage(int DamageAmount){
         Health -= DamageAmount;
         HPText.text = "Health: " + Health + "/" + HealthMAX;
         CameraController.ShakeCamera(HealthLossShakeDuration * DamageAmount, HealthLossShakeStrength * DamageAmount, 0.69f, 0.90f);
+    }
+
+    #endregion
+    
+    #region Wave Management Functions
+    /**
+        This is the wave manager. I'm sorry I'm hard coding it future neko
+        It's okay it shouldn't be too fucked 😭😭😭😭
+    **/
+    private void ManageWave(){
+        
+        //Switch statement to handle the waves
+        switch(CurrentWave){
+            //Tutorial Wave
+            case 0:
+            Debug.Log("Wave 0");
+            break;
+            
+            //Hallway Wave
+            case 1:
+            Debug.Log("Wave 1");
+  
+            if(!Wave1Spawned && !AnimationChecker.IsPlayingAnimation()){
+                Debug.Log("Spawning Wave 1 enemies");
+                EnemiesAvailable[0].gameObject.SetActive(true);
+                EnemiesAvailable[1].gameObject.SetActive(true);
+                EnemiesAvailable[0].UpdateRequiredVotes();
+                EnemiesAvailable[1].UpdateRequiredVotes();
+                EnemiesActive.Add(EnemiesAvailable[0]);
+                EnemiesActive.Add(EnemiesAvailable[1]);
+
+                Wave1Spawned = true;
+            }
+
+            //If the wave is spawned
+            if(Wave1Spawned){
+                //Checks if the list is empty
+                if(!EnemiesActive.Any()){
+                    //No enemies are active, then progress wave
+                    AdjustCamera();
+                }
+            }
+
+            break;
+            
+            //Cafeteria Wave
+            case 2:
+            Debug.Log("Wave 2");
+            
+            if(!Wave2Spawned && !AnimationChecker.IsPlayingAnimation()){
+                Debug.Log("Spawning Wave 2 enemies");
+                EnemiesAvailable[2].gameObject.SetActive(true);
+                EnemiesAvailable[3].gameObject.SetActive(true);
+                EnemiesAvailable[4].gameObject.SetActive(true);
+                EnemiesAvailable[2].UpdateRequiredVotes();
+                EnemiesAvailable[3].UpdateRequiredVotes();
+                EnemiesAvailable[4].UpdateRequiredVotes();
+                EnemiesActive.Add(EnemiesAvailable[2]);
+                EnemiesActive.Add(EnemiesAvailable[3]);
+                EnemiesActive.Add(EnemiesAvailable[4]);
+                Wave2Spawned = true;
+            }
+
+            //If the wave is spawned
+            if(Wave2Spawned){
+                //Checks if the list is empty
+                if(!EnemiesActive.Any()){
+                    //No enemies are active, then progress wave
+                    AdjustCamera();
+                }
+            }
+
+            break;
+
+            //Operations Wave
+            case 3:
+            Debug.Log("Wave 3");
+
+            if(!Wave3Spawned && !AnimationChecker.IsPlayingAnimation()){
+                Debug.Log("Spawning Wave 3 enemies");
+                EnemiesAvailable[5].gameObject.SetActive(true);
+                EnemiesAvailable[6].gameObject.SetActive(true);
+                EnemiesAvailable[7].gameObject.SetActive(true);
+                EnemiesAvailable[8].gameObject.SetActive(true);
+                EnemiesAvailable[5].UpdateRequiredVotes();
+                EnemiesAvailable[6].UpdateRequiredVotes();
+                EnemiesAvailable[7].UpdateRequiredVotes();
+                EnemiesAvailable[8].UpdateRequiredVotes();
+                EnemiesActive.Add(EnemiesAvailable[5]);
+                EnemiesActive.Add(EnemiesAvailable[6]);
+                EnemiesActive.Add(EnemiesAvailable[7]);
+                EnemiesActive.Add(EnemiesAvailable[8]);
+                Wave3Spawned = true;
+            }
+
+            //If the wave is spawned
+            if(Wave3Spawned){
+                //Checks if the list is empty
+                if(!EnemiesActive.Any()){
+                    //No enemies are active, then progress wave
+                    AdjustCamera();
+                }
+            }
+
+            break;
+        }
+    }
+
+    /**
+        This is so an enemy can remove itself from the list of active enemies
+    **/
+    public void RemoveSelf(Enemy EnemyToRemove){
+        //If the enemy is on the list remove
+        if(EnemiesActive.Contains(EnemyToRemove)){
+            EnemiesActive.Remove(EnemyToRemove);
+        }
+    }
+
+    #endregion
+
+    #region Camera functions
+
+    private void AdjustCamera(){
+        //Gets the current wave for the integer
+        //int CurrentWave = CameraRig.GetInteger("Wave");
+        AnimationChecker.SetAnimationPlayingTrue();
+        //Increments the wave
+        CurrentWave++;
+        //Sets the new camera rig to the next wave lol
+        CameraRig.SetInteger("Wave", CurrentWave);
+
     }
 
     #endregion

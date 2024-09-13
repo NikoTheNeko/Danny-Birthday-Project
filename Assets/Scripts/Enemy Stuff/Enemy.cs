@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TwitchChatConnect.Example.MiniGame;
 using Unity.Mathematics;
@@ -25,7 +25,12 @@ public class Enemy : MonoBehaviour{
 
             public string[] PartsNames;
             [Tooltip("This is the dictionary for the enemy parts, used to keep track of voting")]
-            [SerializeField]public Dictionary<string, EnemyPart> PartsDictionary = new Dictionary<string, EnemyPart>();
+            public Dictionary<string, EnemyPart> PartsDictionary = new Dictionary<string, EnemyPart>();
+            [Tooltip("This is the explosions that will play when they die")]
+            public GameObject[] ExplosionAnimations;
+            public GameObject WholeBodyExplosion;
+            [Tooltip("This is the dictionary for the enemy parts, used to find Explosions")]
+            public Dictionary<EnemyPart, GameObject> PartsToExplosionsDictionary = new Dictionary<EnemyPart, GameObject>();
         #endregion
         
         #region Enemy Game Variables
@@ -62,6 +67,16 @@ public class Enemy : MonoBehaviour{
             public float MeleeTimeMax = 4.0f;
             [Tooltip("Array of letters for the bullets, primarily made this way for easter eggs")]
             public string[] BulletLetterArray = {"A"};
+            [Tooltip("enntrance speed")]
+            public float EntranceSpeed = 1.0f;
+            [Tooltip("enntrance time")]
+            public float EntranceTime = 1.0f;
+            [Tooltip("Entrance is ready to be had")]
+            public bool EntranceReady = false;
+            [Tooltip("This is the animation that plays when they die")]
+            public Animator EnemyAnimator;
+            [Tooltip("This is what tells the enemy animation is finished")]
+            public AnimationPlayingChecker EnemyDeathChecker;
         #endregion
 
         #region Game Objects
@@ -74,6 +89,14 @@ public class Enemy : MonoBehaviour{
             
             [Tooltip("Rigidbody for the enemy")]
             public Rigidbody EnemyRigidbody;
+
+            [Tooltip("Object to face the point to get a direction")]
+            public Transform ObjectFacer;
+
+            [Tooltip("The explosion SFX")]
+            public AudioSource ExplosionSFX;
+
+            
 
         [Header("Prefabs")]
             [Tooltip("Bullet Prefab")]
@@ -99,19 +122,37 @@ public class Enemy : MonoBehaviour{
         //Amount of Melee Held
         private int MeleeHeld = 0;
     
+        //The timer for shooting
         private float ShootingTimer = 69420.0f;
+        //The timer for melee
         private float MeleeTimer = 69420.0f;
+
+        [SerializeField]
+        //Timer for the entrance
+        private bool TimerActivationActive = false;
+
+        private bool IsFuckingDead = false;
     	
     #endregion
 
     #region Unity Functions
     void Awake(){
+        //Assignst he part names
         PartsNames = new string[PartsArray.Length];
+        
     }
+
+    void OnEnable(){
+        //Enters the scene if it is ready to enter
+        if(EntranceReady){
+            StartCoroutine(EnterScene(EntranceTime));
+        }
+    }
+    
     // Start is called before the first frame update
     void Start(){
         //Faces enemy towards the player
-        //FacePlayer();
+        FacePlayer();
         //Normalizes the direction vector
         DirectionVector.Normalize();
         //Sets current speed to the correct one with modifiers
@@ -129,6 +170,15 @@ public class Enemy : MonoBehaviour{
             ShootCharacter();
         if(InMeleeRange && CanMelee)
             MeleeCharacter();
+        if(TimerActivationActive)
+            EnterTheScene(EntranceSpeed);
+        if(IsFuckingDead){
+            //Once the animation is done
+            if(!EnemyDeathChecker.IsPlayingAnimation()){
+                this.gameObject.SetActive(false);
+            }
+        }
+        
     }
 
     #endregion
@@ -201,9 +251,14 @@ public class Enemy : MonoBehaviour{
         string LabelStarter = "!" + EnemyNumber;
         //Loops through the array
         for(int i = 0; i < PartsArray.Length; i++){
+            //Gets the part in the array
             EnemyPart TempPart = PartsArray[i];
+            //Creates a label for the part
             string EnemyLabelName = LabelStarter + TempPart.PartName;
+            //Adds it to the part dictionary
             PartsDictionary.Add(EnemyLabelName, TempPart);
+            //Gets the explosions and adds it to the explosion dictionary
+            PartsToExplosionsDictionary.Add(PartsArray[i], ExplosionAnimations[i]);
         }
     }
 
@@ -266,6 +321,7 @@ public class Enemy : MonoBehaviour{
         for(int i = 0; i < PartsArray.Length; i++){
             //Gets the part as a temp
             EnemyPart TempPart = PartsArray[i];
+            string TempPartName = PartsNames[i];
             //Votes required is calculated by the amount of players active and rounds down. (truncated through the int cast)
             TempPart.VotesRequiredRounded = (int)(TempPart.PercentageOfVotesRequired * GameManager.PlayersActive);
             
@@ -274,11 +330,11 @@ public class Enemy : MonoBehaviour{
             if(TempPart.VotesRequiredRounded <= 0)
             	TempPart.VotesRequiredRounded = 1;
             //Adjusts the text on the label
-            TempPart.VotingText.text = TempPart.PartName;
+            TempPart.VotingText.text = TempPartName;
             
             //If the part is nto active
             if(!TempPart.PartActive){
-            	TempPart.VotingText.text += "\n" + "Destroyed!";
+            	TempPart.VotingText.text += "\n" + "Broken!";
             } else {
 	            TempPart.VotingText.text += "\n" + 0 + "/" + TempPart.VotesRequiredRounded;
             }
@@ -293,11 +349,23 @@ public class Enemy : MonoBehaviour{
 		Rotates towarsd the player
 	**/
 	private void FacePlayer(){
-		transform.LookAt(PlayerObject.transform);
+		ObjectFacer.LookAt(EndPointLocation.transform);
 	}
     
     /**
+        Move into the scene please god work
+    **/
+    private void EnterTheScene(float Speed){
+        //If the timer is active then move the character
+        if(TimerActivationActive)
+            EnemyRigidbody.velocity = DirectionVector * Speed;
+    }
+
+    
+
+    /**
     	Simple move towards the player functions
+        DEPRECATED BUT KEEPING IT IN FOR GOOD MEASURE 💖💖💖
     **/
     private void MoveTowardsPlayer(){
     	//Calculates the distance between enemy and player
@@ -321,8 +389,17 @@ public class Enemy : MonoBehaviour{
     private void MoveTowardsPoint(){
         //Moves the object towards the point designated
         Vector3 MovementVector;
-        MovementVector = Vector3.MoveTowards(EnemyRigidbody.position, EndPointLocation.position, CurrentSpeed * Time.deltaTime);
-        EnemyRigidbody.position = MovementVector;
+        //MovementVector = Vector3.MoveTowards(EnemyRigidbody.position, EndPointLocation.position, CurrentSpeed * Time.deltaTime);
+        //EnemyRigidbody.position = MovementVector;
+
+        //Faces the player so it can walk towards the player
+        FacePlayer();
+        //Gets the forward and multiplies the speed to walk towards the player
+        Vector3 WalkToPlayerVelocity = ObjectFacer.forward * CurrentSpeed;
+        //Separates the y for gravity
+        WalkToPlayerVelocity.y += EnemyRigidbody.velocity.y;
+        //Velocity of the enemy moves towards the player
+        EnemyRigidbody.velocity = WalkToPlayerVelocity;
 
         //If it can melee the character
         if(CanMelee){
@@ -339,7 +416,10 @@ public class Enemy : MonoBehaviour{
     
     //Sets the game object inactive
     private void FuckingDies(){
-    	this.gameObject.SetActive(false);
+        
+        StartCoroutine(FuckingDiesHitStop());
+            
+        
     }
     
     #endregion
@@ -352,22 +432,8 @@ public class Enemy : MonoBehaviour{
         that dude is fuckin dead LMAO
     **/
 	public void DestroyPart(EnemyPart PartToDestroy){
-        StartCoroutine(FinishTimestop());
-		//Deals damage
-		Health -= PartToDestroy.Damage;
-		//If the health is lower than 0 then like die ig
-		//tbh if i was an enemy i'd just like live
-		if(Health <= 0){
-			FuckingDies();
-		}
-		//Sets the partactive to false to stop the effect
-		PartToDestroy.PartActive = false;
-		//Sets the WHOLE ASS GAME OBJECT to false so it's just fuckin GONE!!!
-		//Note this is a two step process (One to deactive effects then one to deactivate it visually)
-		PartToDestroy.gameObject.SetActive(false);
-
-        //Updates the buffs to match the changes
-        UpdateBuffs();
+        StartCoroutine(PartHitStop(PartToDestroy));
+        
 	}
 
     /**
@@ -453,10 +519,56 @@ public class Enemy : MonoBehaviour{
 
     #region Coroutines
     //Timestop waiter
-    private IEnumerator FinishTimestop(){
+    private IEnumerator PartHitStop(EnemyPart PartToDestroy){
         while(Time.timeScale != 1.0f){
             yield return null;
         }
+        PartsToExplosionsDictionary[PartToDestroy].SetActive(true);
+        ExplosionSFX.Play();
+		//Deals damage
+		Health -= PartToDestroy.Damage;
+		//If the health is lower than 0 then like die ig
+		//tbh if i was an enemy i'd just like live
+		if(Health <= 0){
+			FuckingDies();
+		}
+		//Sets the partactive to false to stop the effect
+		PartToDestroy.PartActive = false;
+		//Sets the WHOLE ASS GAME OBJECT to false so it's just fuckin GONE!!!
+		//Note this is a two step process (One to deactive effects then one to deactivate it visually)
+		PartToDestroy.gameObject.SetActive(false);
+
+        //Updates the buffs to match the changes
+        UpdateBuffs();
+
+        //Updates the labels
+        PartToDestroy.VotingText.text = PartToDestroy.PartName + "\n Broken!";
+        
+    }
+
+    private IEnumerator FuckingDiesHitStop(){
+        //Waits for the hitstop to end
+        while(Time.timeScale != 1.0f){
+            yield return null;
+        }
+        //Removes itself from the game manager
+        GameManager.RemoveSelf(this);
+        //Sets Variable to true
+        IsFuckingDead = true;
+        EnemyAnimator.SetBool("IsFuckingDead", IsFuckingDead);
+    }    
+
+    //Boost into the scene
+    private IEnumerator EnterScene(float Duration){
+        //Creates a bool to check if the timer is active
+        TimerActivationActive = true;   
+
+        //Holds instructions
+        yield return new WaitForSecondsRealtime(Duration);
+         //Sets the timer back to active
+        TimerActivationActive = false;
+
+
     }
     #endregion
 

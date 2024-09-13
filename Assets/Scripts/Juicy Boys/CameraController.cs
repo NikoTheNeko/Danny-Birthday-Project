@@ -24,9 +24,9 @@ public class CameraController : MonoBehaviour{
     #endregion
 
     void Update(){
-        if(Input.GetKeyDown(KeyCode.Space)){
-            ShakeCamera(TESTDuration, TESTShakeStrength, TESTShakeDecay, TESTLERPStrength);
-        }
+        //if(Input.GetKeyDown(KeyCode.Space)){
+            //ShakeCamera(TESTDuration, TESTShakeStrength, TESTShakeDecay, TESTLERPStrength);
+       // }
     }
 
 

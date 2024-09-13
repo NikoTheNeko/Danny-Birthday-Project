@@ -16,8 +16,8 @@ public class HitStopper : MonoBehaviour{
     #endregion
 
     void Update(){
-        if(Input.GetKeyDown(KeyCode.Space))
-            HoldForHitStop(TESTDuration, TESTEaseback);
+        //if(Input.GetKeyDown(KeyCode.Space))
+            //HoldForHitStop(TESTDuration, TESTEaseback);
 
     }
 
@@ -34,6 +34,7 @@ public class HitStopper : MonoBehaviour{
         StillInTimeStop = true;
         //Holds executings for the timescale change
         yield return new WaitForSecondsRealtime(Duration);
+        /**
         while(Time.timeScale < 0.9f){
             //Reverts it back to 1
             if(Time.timeScale < 0.90f){
@@ -46,6 +47,7 @@ public class HitStopper : MonoBehaviour{
                 StillInTimeStop = false;
             }
         }
+        **/
         Time.timeScale = 1.0f;
         StillInTimeStop = false;
         Debug.Log("TimeScale is currently at " + Time.timeScale);

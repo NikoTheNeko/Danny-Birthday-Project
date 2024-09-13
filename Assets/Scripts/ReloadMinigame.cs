@@ -17,6 +17,10 @@ public class ReloadMinigame : MonoBehaviour{
     
     [Tooltip("This is the Game Manager")]
     public GameManager GameManagerObject;
+
+	[Header("Reload Sounds")]
+	public AudioSource[] ReloadSounds;
+
     #endregion
 
     #region Private Variables
@@ -36,6 +40,7 @@ public class ReloadMinigame : MonoBehaviour{
     // Update is called once per frame
     void Update(){
         UpdateText();
+		
     }
     
     /**
@@ -49,42 +54,49 @@ public class ReloadMinigame : MonoBehaviour{
 		switch(UpperCasedMessage){
 			case "R":
 				if(ReloadTextCounter == 0){
+					ReloadSounds[ReloadTextCounter].Play();
 					ReloadTextCounter++;
 				}
 				break;
 			case "E":
 				if(ReloadTextCounter == 1){
+					ReloadSounds[ReloadTextCounter].Play();
 					ReloadTextCounter++;
 				}
 				break;
 			case "L":
 				if(ReloadTextCounter == 2){
+					ReloadSounds[ReloadTextCounter].Play();
 					ReloadTextCounter++;
 				}
 				break;
 			case "O":
 				if(ReloadTextCounter == 3){
+					ReloadSounds[ReloadTextCounter].Play();
 					ReloadTextCounter++;
 				}
 				break;
 			case "A":
 				if(ReloadTextCounter == 4){
+					ReloadSounds[ReloadTextCounter].Play();
 					ReloadTextCounter++;
 				}
 				break;
 			case "D":
 				if(ReloadTextCounter == 5){
+					
 					ReloadTextCounter++;
 				}
 				break;
 		}
+		//Resets the game
 		if(ReloadTextCounter == 6){
-			Debug.Log("Gun is Reloaded.");
 			GameManagerObject.ReloadGun();
 			GameManagerObject.UpdateBulletTextCounter();
 			ResetGame();
 			gameObject.SetActive(false);
 		}
+		
     }
     
     private void UpdateText(){

@@ -1,0 +1,110 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-662006577540479177
+MonoBehaviour:
+  m_ObjectHideFlags: 11
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  version: 4
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Wood Pine
+  m_Shader: {fileID: 4800000, guid: 2a230514c860643f69b6a4d1871d3825, type: 3}
+  m_Parent: {fileID: 2100000, guid: 02932a3f2c45dca4889c68747679c3cf, type: 2}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords:
+  - DR_GRADIENT_ON
+  - DR_OUTLINE_ON
+  - _DETAILMAPBLENDINGMODE_MULTIPLY
+  - _NORMALMAP
+  - _TEXTUREBLENDINGMODE_MULTIPLY
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap:
+    RenderType: Opaque
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: ee4a2455b56850142a859fa2cc354766, type: 3}
+        m_Scale: {x: 0.1, y: 0.1}
+        m_Offset: {x: 0, y: 0}
+    - _GradientRamp:
+        m_Texture: {fileID: 3956288887782003437}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _GradientCenterY: -7.64
+    - _GradientEnabled: 1
+    - _GradientSize: 16.85
+    - _TextureImpact: 1
+    m_Colors:
+    - _ColorGradient: {r: 0.24429494, g: 0.12148452, b: 0.3962264, a: 0.56078434}
+    - _OutlineColor: {r: 0.1981132, g: 0.15264198, b: 0.10933606, a: 1}
+  m_BuildTextureStacks: []
+--- !u!28 &3956288887782003437
+Texture2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: z__GradientRampTex{"mode":0,"colorKeys":[{"color":{"r":0.349056601524353,"g":0.26308611035346987,"b":0.20910465717315675,"a":1.0},"time":0.0},{"color":{"r":0.5566037893295288,"g":0.38655146956443789,"b":0.2809273898601532,"a":1.0},"time":0.529930591583252},{"color":{"r":0.7264150977134705,"g":0.5769713521003723,"b":0.48313456773757937,"a":1.0},"time":1.0}],"alphaKeys":[{"alpha":1.0,"time":0.0},{"alpha":1.0,"time":1.0}]}
+  m_ImageContentsHash:
+    serializedVersion: 2
+    Hash: 00000000000000000000000000000000
+  m_ForcedFallbackFormat: 4
+  m_DownscaleFallback: 0
+  m_IsAlphaChannelOptional: 0
+  serializedVersion: 2
+  m_Width: 256
+  m_Height: 1
+  m_CompleteImageSize: 1024
+  m_MipsStripped: 0
+  m_TextureFormat: 5
+  m_MipCount: 1
+  m_IsReadable: 1
+  m_IsPreProcessed: 0
+  m_IgnoreMipmapLimit: 0
+  m_MipmapLimitGroupName: 
+  m_StreamingMipmaps: 0
+  m_StreamingMipmapsPriority: 0
+  m_VTOnly: 0
+  m_AlphaIsTransparency: 0
+  m_ImageCount: 1
+  m_TextureDimension: 2
+  m_TextureSettings:
+    serializedVersion: 2
+    m_FilterMode: 1
+    m_Aniso: 1
+    m_MipBias: 0
+    m_WrapU: 1
+    m_WrapV: 1
+    m_WrapW: 1
+  m_LightmapFormat: 0
+  m_ColorSpace: 0
+  m_PlatformBlob: 
+  image data: 1024
+  _typelessdata: ff594335ff594335ff5a4436ff5a4436ff5b4436ff5b4436ff5b4436ff5c4536ff5c4536ff5d4537ff5d4537ff5d4637ff5e4637ff5e4637ff5e4637ff5f4737ff5f4737ff604738ff604738ff604838ff614838ff614838ff624838ff624838ff624939ff634939ff634939ff644939ff644a39ff644a39ff654a39ff654a3aff664b3aff664b3aff664b3aff674b3aff674b3aff684c3aff684c3aff684c3bff694c3bff694d3bff694d3bff6a4d3bff6a4d3bff6b4e3bff6b4e3cff6b4e3cff6c4e3cff6c4f3cff6d4f3cff6d4f3cff6d4f3cff6e4f3dff6e503dff6f503dff6f503dff6f503dff70513dff70513dff71513dff71513eff71523eff72523eff72523eff72523eff73523eff73533eff74533fff74533fff74533fff75543fff75543fff76543fff76543fff76553fff775540ff775540ff785540ff785540ff785640ff795640ff795640ff7a5641ff7a5741ff7a5741ff7b5741ff7b5741ff7b5841ff7c5841ff7c5842ff7d5842ff7d5942ff7d5942ff7e5942ff7e5942ff7f5942ff7f5a42ff7f5a43ff805a43ff805a43ff815b43ff815b43ff815b43ff825b43ff825c44ff835c44ff835c44ff835c44ff845c44ff845d44ff845d44ff855d45ff855d45ff865e45ff865e45ff865e45ff875e45ff875f45ff885f45ff885f46ff885f46ff896046ff896046ff8a6046ff8a6046ff8a6046ff8b6147ff8b6147ff8c6147ff8c6147ff8c6247ff8d6247ff8d6247ff8d6247ff8e6348ff8e6348ff8f6348ff8f6449ff8f6449ff90654aff90654aff90654bff91664bff91664bff91674cff92674cff92674dff93684dff93684eff93694eff94694eff94694fff946a4fff956a50ff956b50ff956b51ff966b51ff966c51ff976c52ff976d52ff976d53ff986d53ff986e54ff986e54ff996f54ff996f55ff996f55ff9a7056ff9a7056ff9b7157ff9b7157ff9b7257ff9c7258ff9c7258ff9c7359ff9d7359ff9d745aff9d745aff9e745bff9e755bff9f755bff9f765cff9f765cffa0765dffa0775dffa0775effa1785effa1785effa1785fffa2795fffa27960ffa27a60ffa37a61ffa37a61ffa47b61ffa47b62ffa47c62ffa57c63ffa57c63ffa57d64ffa67d64ffa67e64ffa67e65ffa77e65ffa77f66ffa87f66ffa88067ffa88067ffa98067ffa98168ffa98168ffaa8269ffaa8269ffaa836affab836affab836affac846bffac846bffac856cffad856cffad856dffad866dffae866dffae876effae876effaf876fffaf886fffaf8870ffb08970ffb08970ffb18971ffb18a71ffb18a72ffb28b72ffb28b73ffb28b73ffb38c73ffb38c74ffb38d74ffb48d75ffb48d75ffb58e76ffb58e76ffb58f76ffb68f77ffb68f77ffb69078ffb79078ffb79179ffb79179ffb89279ffb8927affb9927affb9937bffb9937b
+  m_StreamData:
+    serializedVersion: 2
+    offset: 0
+    size: 0
+    path: 
